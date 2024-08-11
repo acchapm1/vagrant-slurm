@@ -51,6 +51,7 @@ Vagrant.configure(2) do |vm_config|
 
       # Install and Setup Slurm
       config.vm.provision "shell", inline: <<-SHELL
+        export JOIN_TIMEOUT=#{JOIN_TIMEOUT}
         /bin/bash /vagrant/provision.sh
       SHELL
     end
