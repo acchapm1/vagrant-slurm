@@ -18,7 +18,7 @@ SSH_FORWARD = settings['SSH_FORWARD'] || false
 
 # Default Slurm settings
 SLURM_NODES  = settings['SLURM_NODES']  || 4
-JOIN_TIMEOUT = settings['JOIN_TIMEOUT'] || 60
+JOIN_TIMEOUT = settings['JOIN_TIMEOUT'] || 120
 
 # Node settings overrides
 if File.exist?('nodes.rb')
