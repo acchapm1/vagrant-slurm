@@ -50,20 +50,20 @@ By default, each node is allocated:
 
 	By default, this script searches for prime numbers from `1-10,000` and `10,001-20,000`
 
-    You can adjust the range searched per node by providing an integer argument, e.g.:
+   You can adjust the range searched per node by providing an integer argument, e.g.:
 
 	   /vagrant/primes.sh 20000
 
 	The script will then drop you into a `watch -n0.1 squeue` view so you can see
-  each job computing on `nodes[3-4]`. You may `CTRL+c` out of this view, and
-  the jobs will continue in the background. The home directory for the `submit`
-  user is in the shared `/vagrant` directory, so the results from each node are
-  shared back to the login node.
+   the job computing on `nodes[3-4]`. You may `CTRL+c` out of this view, and
+   the job will continue in the background. The home directory for the `submit`
+   user is in the shared `/vagrant` directory, so the results from each node are
+   shared back to the login node.
 
 4. View the resulting prime numbers found, check `ls` for exact filenames
 
-       less slurm-1.out
-       less slurm-2.out
+       less slurm-1_0.out
+       less slurm-2_1.out
 
 ### Configuration Tool
 

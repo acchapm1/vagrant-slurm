@@ -24,7 +24,7 @@ RANGE=${1:-10000}
 function find_primes() {
   local START="$1"
   local END="$2"
-  echo "INFO: Job $SLURM_JOB_ID looking for prime numbers from $START to $END"
+  echo "INFO: Job ${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID} looking for prime numbers from $START to $END"
   for ((i=START;i<=END;i++)); do
     if [ "$(factor "$i")" == "$i: $i" ]; then
       echo "$i"
@@ -32,10 +32,13 @@ function find_primes() {
   done
 }
 
-if [ -z "$SLURM_JOB_ID" ]; then
-  sbatch -N1 --wrap="$0 1 $RANGE"
-  sbatch -N1 --wrap="$0 $((RANGE + 1)) $((RANGE * 2))"
+if [ -z "$SLURM_ARRAY_JOB_ID" ]; then
+  sbatch -N1 -a0-1 "$0" "$RANGE"
   watch -n0.1 squeue
 else
-  find_primes "$1" "$2"
+  if [ "$SLURM_ARRAY_TASK_ID" -eq 0 ]; then
+    find_primes 1 "$RANGE"
+  else
+    find_primes $((RANGE + 1)) $((RANGE * 2))
+  fi
 fi
