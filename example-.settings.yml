@@ -1,0 +1,16 @@
+########################
+### Example settings ###
+########################
+
+# This configuration as-is will take 4 threads/cores and 4 GB of RAM total.
+# Set per-node overrides in nodes.rb if your setup requires it
+
+# Vagrant default global overrides
+#VAGRANT_BOX: debian/bookworm64
+VAGRANT_CPU: 1
+VAGRANT_MEM: 1024
+#SSH_FORWARD: true
+
+# Slurm default overrides
+#SLURM_NODES: 4
+#JOIN_TIMEOUT: 120

@@ -86,3 +86,90 @@ To clean up files placed on the host through Vagrant file sharing:
 This command is useful when you want to remove all generated files and return
 to a clean state. The Makefile is quite simple, so you can refer to it directly
 to see exactly what's being cleaned up.
+
+If you have included override settings that you want to remove as well, run:
+
+	git clean -fdx
+
+This command will remove all untracked files and directories, including those
+ignored by .gitignore. Be cautious when using this command as it will delete
+files that are not tracked by Git. Use the `-n` flag to dry-run first.
+
+## Global Overrides
+If you wish to override the default settings on a global level,
+you can do so by creating a `.settings.yml` file based on the provided
+`example-.settings.yml` file:
+
+	cp example-.settings.yml .settings.yml
+
+Once you have copied the `example-.settings.yml` to `.settings.yml`, you can
+edit it to override the default settings. Below are the available settings:
+
+### Vagrant Settings Overrides
+- `VAGRANT_BOX`
+  - Default: `debian/bookworm64`
+  - Tested most around Debian Stable x86_64 (currently Bookworm)
+- `VAGRANT_CPU`
+  - Default: `2`
+  - Two threads or cores per node, depending on CPU architecture
+- `VAGRANT_MEM`
+  - Default: `2048`
+  - Two GB of RAM per node
+- `SSH_FORWARD`
+  - Default: `false`
+  - Enable this if you need to forward SSH agents to the Vagrant machines
+
+### Minimal Resource Setup
+Resource-conscious users can copy and use the provided `example-.settings.yml`
+file without modifications. This results in a cluster configuration using only
+1 vCPU and 1 GB RAM per node (totaling 4 threads/cores and 4 GB RAM), allowing
+basic operation on modest hardware.
+
+### Slurm Settings Overrides
+- `SLURM_NODES`
+  - Default: `4`
+  - The _total_ number of nodes in your Slurm cluster
+- `JOIN_TIMEOUT`
+  - Default: `120`
+  - Timeout in seconds for nodes to obtain the shared munge.key
+
+## Per-Node Overrides
+The naming convention for nodes follows a specific pattern: `nodeX`, where `X`
+is a number corresponding to the node's position within the cluster. This
+convention is strictly adhered to due to the iteration logic within the
+`Vagrantfile`, which utilizes a loop iterating over an array range defined by
+the number of slurm nodes (`Array(1..SLURM_NODES)`). Each iteration of the loop
+corresponds to a node, and the loop counter is in the node name (`nodeX`).
+
+The overrides, if specified in `nodes.rb`, take the highest precedence,
+followed by the overrides in `.settings.yml`, and lastly, the defaults hard
+coded in the `Vagrantfile` itself. This hierarchy allows for a flexible
+configuration where global overrides can be specified in `.settings.yml`, and
+more granular, per-node overrides can be defined in `nodes.rb`. If a particular
+setting is not overridden in either `.settings.yml` or `nodes.rb`, the default
+value from the `Vagrantfile` is used.
+
+If you wish to override the default settings on a per-node level, you can do so
+by creating a `nodes.rb` file based on the provided `example-nodes.rb` file:
+
+	cp example-nodes.rb nodes.rb
+
+Once you have copied the `example-nodes.rb` to `nodes.rb`, you can edit it to
+override the default settings. Below are the available settings available
+per-node:
+
+- `BOX`
+  - Default: `debian/bookworm64` (or as overridden in `.settings.yml`)
+  - Vagrant box or image to be used for the node.
+- `CPU`
+  - Default: `2` (or as overridden in `.settings.yml`)
+  - Defines the number of CPU cores or threads (depending on architecture).
+- `MEM`
+  - Default: `2048` (2 GB) (or as overridden in `.settings.yml`)
+  - Specifies the amount of memory (in MB) allocated to the node.
+- `SSH`
+  - Default: `false` (or as overridden in `.settings.yml`)
+  - Enable this if you need to forward SSH agents to the Vagrant machine
+
+All settings are optional, and as many or as few options can be overridden on
+any arbitrary node.
