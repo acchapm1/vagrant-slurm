@@ -63,7 +63,7 @@ By default, each node is allocated:
 4. View the resulting prime numbers found, check `ls` for exact filenames
 
        less slurm-1_0.out
-       less slurm-2_1.out
+       less slurm-1_1.out
 
 ### Configuration Tool
 
@@ -96,6 +96,10 @@ ignored by .gitignore. Be cautious when using this command as it will delete
 files that are not tracked by Git. Use the `-n` flag to dry-run first.
 
 ## Global Overrides
+
+**WARNING:** Always update `slurm.conf` to match any CPU overrides to prevent
+resource allocation conflicts.
+
 If you wish to override the default settings on a global level,
 you can do so by creating a `.settings.yml` file based on the provided
 `example-.settings.yml` file:
@@ -124,6 +128,11 @@ Resource-conscious users can copy and use the provided `example-.settings.yml`
 file without modifications. This results in a cluster configuration using only
 1 vCPU and 1 GB RAM per node (totaling 4 threads/cores and 4 GB RAM), allowing
 basic operation on modest hardware.
+
+When using this minimal setup with 1 vCPU, you'll need to update the `slurm.conf` file.
+Apply the following change to the default `slurm.conf`:
+
+	sed -i 's/CPUs=2/CPUs=1/g' slurm.conf
 
 ### Slurm Settings Overrides
 - `SLURM_NODES`

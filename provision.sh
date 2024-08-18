@@ -46,12 +46,12 @@ fi
 dpkg -s slurm-client &>/dev/null || apt-get install -y slurm-client
 
 # Create directories for Slurm
-mkdir -p /var/spool/slurm /var/log/slurm /etc/slurm
-chown slurm:slurm /var/spool/slurm /var/log/slurm /etc/slurm
+mkdir -p /var/spool/slurm /etc/slurm
+chown slurm:slurm /var/spool/slurm /etc/slurm
 
 # Copy slurm.conf and cgroup.conf
-cp -u /vagrant/slurm.conf /etc/slurm/slurm.conf
-cp -u /vagrant/cgroup.conf /etc/slurm/cgroup.conf
+cp -f /vagrant/slurm.conf /etc/slurm/slurm.conf
+cp -f /vagrant/cgroup.conf /etc/slurm/cgroup.conf
 chown slurm:slurm /etc/slurm/slurm.conf /etc/slurm/cgroup.conf
 chmod 644 /etc/slurm/slurm.conf /etc/slurm/cgroup.conf
 
@@ -107,7 +107,8 @@ else
     sleep 10
   done
 
-  # Enable/start/test munge service
+  # Enable/start munge service
+  sleep 3
   cp -f /vagrant/munge.key /etc/munge/munge.key
   chown munge:munge /etc/munge/munge.key
   chmod 400 /etc/munge/munge.key
