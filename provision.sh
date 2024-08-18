@@ -8,7 +8,7 @@
 set -xe
 
 # Increase APT retries and timeouts to improve provisioning reliability
-sudo tee /etc/apt/apt.conf.d/99custom-retries << EOF
+cat > /etc/apt/apt.conf.d/99custom-retries << EOF
 Acquire::Retries "5";
 Acquire::http::Timeout "120";
 Acquire::ftp::Timeout "120";

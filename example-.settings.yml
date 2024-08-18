@@ -1,9 +1,14 @@
 ########################
 ### Example settings ###
 ########################
-
 # This configuration as-is will take 4 threads/cores and 4 GB of RAM total.
-# Set per-node overrides in nodes.rb if your setup requires it
+#
+# Note: This example reduces the CPUs used in the default configuration. If you
+# use these settings, you must update the slurm.conf file to reflect the
+# reduced CPU count. Set the CPUs value in slurm.conf to match the number of
+# vCPUs you specify here, assuming there are no node-specific overrides.
+#
+# You may also set per-node overrides in nodes.rb if needed
 
 # Vagrant default global overrides
 #VAGRANT_BOX: debian/bookworm64

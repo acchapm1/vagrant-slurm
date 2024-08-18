@@ -43,12 +43,6 @@ Vagrant.configure(2) do |vm_config|
         virt.cpus = NODES.dig("node#{count}", 'CPU') || VAGRANT_CPU
       end
 
-      # VirtualBox
-      config.vm.provider :virtualbox do |vbox|
-        vbox.memory = NODES.dig("node#{count}", 'MEM') || VAGRANT_MEM
-        vbox.cpus = NODES.dig("node#{count}", 'CPU') || VAGRANT_CPU
-      end
-
       # Install and Setup Slurm
       config.vm.provision "shell", inline: <<-SHELL
         export JOIN_TIMEOUT=#{JOIN_TIMEOUT}

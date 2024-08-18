@@ -6,17 +6,57 @@ This repository contains a `Vagrantfile` and the necessary configuration for
 automating the setup of a Slurm cluster using Vagrant's shell provisioning on
 Debian 12 x86_64 VMs.
 
-### Prerequisites
+## Prerequisites
 
-This setup was developed using vagrant-libvirt with NFS for file sharing,
-rather than the more common VirtualBox configuration which typically uses
-VirtualBox's Shared Folders. However, VirtualBox should work fine.
+This setup was developed using vagrant-libvirt with NFS for file sharing.
 
-The core requirements for this setup are:
-- Vagrant (with functioning file sharing)
+- [Vagrant](https://wiki.debian.org/Vagrant)
+(tested with 2.3.4 packaged by Debian 12)
+- [Vagrant-libvirt provider](https://vagrant-libvirt.github.io/vagrant-libvirt/)
+(tested with 0.11.2 packaged by Debian 12)
+- Working Vagrant
+[Synced Folders using NFS](https://developer.hashicorp.com/vagrant/docs/v2.3.4/synced-folders/nfs)
 - (Optional) Make (for convenience commands)
 
-### Cluster Structure
+### VirtualBox Incompatibility
+
+While efforts were made to support VirtualBox, several challenges prevent its
+use in the current state.
+
+1. **Hostname Resolution**: Unlike libvirt, VirtualBox doesn't provide
+automatic hostname resolution between VMs. This requires an additional private
+network and potentially custom scripting or plugins to enable inter-VM
+communication by hostname.
+
+2. **Sequential Provisioning**: VirtualBox provisions VMs sequentially, which,
+while preventing a now exceedingly rare race condition with the munge.key
+generation and distribution, significantly increases the overall setup time
+compared to vagrant-libvirt's parallel provisioning and complicates potential
+scripted solutions for hostname resolution.
+
+3. **Shared Folder Permissions**: VirtualBox's shared folder mechanism doesn't
+preserve Unix permissions from the host system. The `vagrant` user owns all
+shared files in the `/vagrant` mount point, complicating the setup of a
+non-privileged `submit` user and stripping the execution bit from shared
+scripts.
+
+4. **Provider-Specific Options**: Using mount options for VirtualBox shared
+folders is incompatible with libvirt, making maintaining a single,
+provider-agnostic configuration challenging.
+
+Potential workarounds like assigning static IPs compromise the flexibility of
+the current setup. The fundamental differences between VirtualBox and libvirt
+in handling shared folders and networking make it challenging to create a truly
+provider-agnostic solution without significant compromises or overhead.
+
+For now, this project focuses on the libvirt provider due to its better
+compatibility with the requirements of an automated Slurm cluster setup. Future
+development could explore creating separate, provider-specific configurations
+to support VirtualBox, acknowledging the additional maintenance this would
+require.
+
+## Cluster Structure
+
 - `node1`: Head Node (runs `slurmctld`)
 - `node2`: Login/Submit Node
 - `node3` / `node4`: Compute Nodes (runs `slurmd`)
@@ -25,9 +65,9 @@ By default, each node is allocated:
 - 2 threads/cores (depending on architecture)
 - 2 GB of RAM
 
-**Warning: 8 vCPUs and 8 GB of RAM is used in total resources**
+**Warning: 8 vCPUs and 8 GB of RAM are used by default in total resources**
 
-## Quick Start
+## Getting Started
 
 1. To build the cluster, you can use either of these methods
 
@@ -48,57 +88,59 @@ By default, each node is allocated:
 
 	   /vagrant/primes.sh
 
-	By default, this script searches for prime numbers from `1-10,000` and `10,001-20,000`
+	By default, this script searches for prime numbers from `1-10,000` and
+  `10,001-20,000`
 
    You can adjust the range searched per node by providing an integer argument, e.g.:
 
 	   /vagrant/primes.sh 20000
 
 	The script will then drop you into a `watch -n0.1 squeue` view so you can see
-   the job computing on `nodes[3-4]`. You may `CTRL+c` out of this view, and
-   the job will continue in the background. The home directory for the `submit`
-   user is in the shared `/vagrant` directory, so the results from each node are
-   shared back to the login node.
+  the job computing on `nodes[3-4]`. You may `CTRL+c` out of this view, and
+  the job will continue in the background. The `submit` user's home directory
+  is in the NFS shared `/vagrant` directory, so the results from each node
+  are shared with the login node.
 
-4. View the resulting prime numbers found, check `ls` for exact filenames
+4. View the resulting prime numbers found (check `ls` for exact filenames)
 
        less slurm-1_0.out
        less slurm-1_1.out
 
-### Configuration Tool
+## Configuration Tool
 
 On the Head Node (`node1`), you can access the configuration tools specific to
 the version distributed with Debian. Since this may not be the latest Slurm
-release, it's important to use the configuration tool that matches the
-installed version. To access these tools, you can use Python to run a simple
-web server:
+release, using the configuration tool that matches the installed version is
+important. To access these tools, you can use Python to run a simple web server
 
 	python3 -m http.server 8080 --directory /usr/share/doc/slurm-wlm/html/
 
 You can then access the HTML documentation via the VM's IP address at port 8080
 in your web browser on the host machine.
 
-### Cleanup
+## Cleanup
 To clean up files placed on the host through Vagrant file sharing:
 
 	make clean
 
-This command is useful when you want to remove all generated files and return
-to a clean state. The Makefile is quite simple, so you can refer to it directly
-to see exactly what's being cleaned up.
+This command is useful to remove all generated files and return to a clean
+state. The Makefile is quite simple, so you can refer to it directly to see
+what's being cleaned up.
 
 If you have included override settings that you want to remove as well, run:
 
 	git clean -fdx
 
 This command will remove all untracked files and directories, including those
-ignored by .gitignore. Be cautious when using this command as it will delete
-files that are not tracked by Git. Use the `-n` flag to dry-run first.
+ignored by .gitignore. Be cautious when using this command, as it will delete
+files that Git does not track. Use the `-n` flag to dry-run first.
 
-## Global Overrides
+## Overrides
 
-**WARNING:** Always update `slurm.conf` to match any CPU overrides to prevent
-resource allocation conflicts.
+### Global Overrides
+
+**WARNING:** Always update `slurm.conf` to match any CPU overrides on compute
+nodes to prevent resource allocation conflicts.
 
 If you wish to override the default settings on a global level,
 you can do so by creating a `.settings.yml` file based on the provided
@@ -109,7 +151,7 @@ you can do so by creating a `.settings.yml` file based on the provided
 Once you have copied the `example-.settings.yml` to `.settings.yml`, you can
 edit it to override the default settings. Below are the available settings:
 
-### Vagrant Settings Overrides
+#### Vagrant Settings Overrides
 - `VAGRANT_BOX`
   - Default: `debian/bookworm64`
   - Tested most around Debian Stable x86_64 (currently Bookworm)
@@ -123,18 +165,7 @@ edit it to override the default settings. Below are the available settings:
   - Default: `false`
   - Enable this if you need to forward SSH agents to the Vagrant machines
 
-### Minimal Resource Setup
-Resource-conscious users can copy and use the provided `example-.settings.yml`
-file without modifications. This results in a cluster configuration using only
-1 vCPU and 1 GB RAM per node (totaling 4 threads/cores and 4 GB RAM), allowing
-basic operation on modest hardware.
-
-When using this minimal setup with 1 vCPU, you'll need to update the `slurm.conf` file.
-Apply the following change to the default `slurm.conf`:
-
-	sed -i 's/CPUs=2/CPUs=1/g' slurm.conf
-
-### Slurm Settings Overrides
+#### Slurm Settings Overrides
 - `SLURM_NODES`
   - Default: `4`
   - The _total_ number of nodes in your Slurm cluster
@@ -142,7 +173,22 @@ Apply the following change to the default `slurm.conf`:
   - Default: `120`
   - Timeout in seconds for nodes to obtain the shared munge.key
 
-## Per-Node Overrides
+#### Minimal Resource Setup
+Resource-conscious users can copy and use the provided `example-.settings.yml`
+file without modifications. This results in a cluster configuration using only
+1 vCPU and 1 GB RAM per node (totaling 4 threads/cores and 4 GB RAM), allowing
+basic operation on modest hardware.
+
+When using this minimal setup with 1 vCPU, you'll need to update the
+`slurm.conf` file. Apply the following change to the default `slurm.conf`:
+
+	sed -i 's/CPUs=2/CPUs=1/g' slurm.conf
+
+### Per-Node Overrides
+
+**WARNING:** Remember to update `slurm.conf` to match any CPU overrides on
+compute nodes to prevent resource allocation conflicts.
+
 The naming convention for nodes follows a specific pattern: `nodeX`, where `X`
 is a number corresponding to the node's position within the cluster. This
 convention is strictly adhered to due to the iteration logic within the
