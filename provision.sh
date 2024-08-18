@@ -7,6 +7,13 @@
 # Print commands and exit on error
 set -xe
 
+# Increase APT retries and timeouts to improve provisioning reliability
+sudo tee /etc/apt/apt.conf.d/99custom-retries << EOF
+Acquire::Retries "5";
+Acquire::http::Timeout "120";
+Acquire::ftp::Timeout "120";
+EOF
+
 # Prevents interactive prompts during package installation
 export DEBIAN_FRONTEND=noninteractive
 
